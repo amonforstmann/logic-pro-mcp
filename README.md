@@ -107,14 +107,23 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 The server requires two macOS permissions:
 
-1. **Accessibility** — System Settings > Privacy & Security > Accessibility > add your terminal app
+1. **Accessibility** — System Settings > Privacy & Security > Accessibility
 2. **Automation** — System Settings > Privacy & Security > Automation > allow control of Logic Pro (or Logic Pro Creator Studio)
+
+The process that needs Accessibility trust depends on how you run the server:
+
+| Host | What to add to Accessibility |
+|------|------------------------------|
+| **Terminal / Claude Code** | Your terminal app (Terminal, iTerm2, Ghostty, etc.) |
+| **Claude Desktop** | `/Applications/Claude.app/Contents/Helpers/disclaimer` — the helper binary that spawns MCP servers. Use Finder (Cmd+Shift+G) to navigate there, then drag it into the Accessibility list. |
 
 Check permission status:
 
 ```bash
 LogicProMCP --check-permissions
 ```
+
+> **Note:** `--check-permissions` reflects the trust status of the *current* process. Running it from your terminal may show "granted" while Claude Desktop still reports "not trusted" — they are different parent processes.
 
 ## Usage
 
