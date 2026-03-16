@@ -15,7 +15,7 @@ actor AccessibilityChannel: Channel {
             throw AccessibilityError.notTrusted
         }
         guard ProcessUtils.isLogicProRunning else {
-            Log.warn("Logic Pro not running at AX channel start", subsystem: "ax")
+            Log.warn("No Logic Pro variant running at AX channel start", subsystem: "ax")
             return
         }
         Log.info("Accessibility channel started", subsystem: "ax")
@@ -27,7 +27,7 @@ actor AccessibilityChannel: Channel {
 
     func execute(operation: String, params: [String: String]) async -> ChannelResult {
         guard ProcessUtils.isLogicProRunning else {
-            return .error("Logic Pro is not running")
+            return .error("\(ProcessUtils.activeAppName) is not running")
         }
 
         switch operation {
@@ -125,9 +125,9 @@ actor AccessibilityChannel: Channel {
         }
         // Quick smoke test: can we reach the app root?
         guard AXLogicProElements.appRoot() != nil else {
-            return .unavailable("Cannot access Logic Pro AX element")
+            return .unavailable("Cannot access \(ProcessUtils.activeAppName) AX element")
         }
-        return .healthy(detail: "AX connected to Logic Pro")
+        return .healthy(detail: "AX connected to \(ProcessUtils.activeAppName)")
     }
 
     // MARK: - Transport
@@ -327,7 +327,7 @@ actor AccessibilityChannel: Channel {
 
     private func getProjectInfo() -> ChannelResult {
         guard let window = AXLogicProElements.mainWindow() else {
-            return .error("Cannot locate Logic Pro main window")
+            return .error("Cannot locate \(ProcessUtils.activeAppName) main window")
         }
         let title = AXHelpers.getTitle(window) ?? "Unknown"
         var info = ProjectInfo()

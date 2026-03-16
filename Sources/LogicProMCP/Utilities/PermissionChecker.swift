@@ -11,14 +11,15 @@ enum PermissionChecker {
         var allGranted: Bool { accessibility && automationLogicPro }
 
         var summary: String {
+            let name = ProcessUtils.activeAppName
             var lines: [String] = []
             lines.append("Accessibility: \(accessibility ? "granted" : "NOT GRANTED")")
-            lines.append("Automation (Logic Pro): \(automationLogicPro ? "granted" : "NOT GRANTED")")
+            lines.append("Automation (\(name)): \(automationLogicPro ? "granted" : "NOT GRANTED")")
             if !accessibility {
                 lines.append("  → System Settings > Privacy & Security > Accessibility → add your terminal app")
             }
             if !automationLogicPro {
-                lines.append("  → System Settings > Privacy & Security > Automation → allow control of Logic Pro")
+                lines.append("  → System Settings > Privacy & Security > Automation → allow control of \(name)")
             }
             return lines.joined(separator: "\n")
         }
@@ -38,8 +39,9 @@ enum PermissionChecker {
             // Can't test automation if Logic Pro isn't running
             return false
         }
+        let name = ProcessUtils.activeAppName
         let script = NSAppleScript(source: """
-            tell application "Logic Pro" to return name
+            tell application "\(name)" to return name
         """)
         var errorInfo: NSDictionary?
         _ = script?.executeAndReturnError(&errorInfo)

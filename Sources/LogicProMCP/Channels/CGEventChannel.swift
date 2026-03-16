@@ -90,7 +90,7 @@ actor CGEventChannel: Channel {
 
     func start() async throws {
         guard ProcessUtils.isLogicProRunning else {
-            Log.warn("Logic Pro not running at CGEvent channel start", subsystem: "cgEvent")
+            Log.warn("No Logic Pro variant running at CGEvent channel start", subsystem: "cgEvent")
             return
         }
         Log.info("CGEvent channel started", subsystem: "cgEvent")
@@ -102,7 +102,7 @@ actor CGEventChannel: Channel {
 
     func execute(operation: String, params: [String: String]) async -> ChannelResult {
         guard let pid = ProcessUtils.logicProPID() else {
-            return .error("Logic Pro is not running")
+            return .error("\(ProcessUtils.activeAppName) is not running")
         }
 
         guard let shortcut = Self.keyMap[operation] else {
@@ -119,10 +119,10 @@ actor CGEventChannel: Channel {
 
     func healthCheck() async -> ChannelHealth {
         guard ProcessUtils.isLogicProRunning else {
-            return .unavailable("Logic Pro is not running")
+            return .unavailable("\(ProcessUtils.activeAppName) is not running")
         }
         guard ProcessUtils.logicProPID() != nil else {
-            return .unavailable("Cannot determine Logic Pro PID")
+            return .unavailable("Cannot determine \(ProcessUtils.activeAppName) PID")
         }
         return .healthy(detail: "CGEvent ready")
     }

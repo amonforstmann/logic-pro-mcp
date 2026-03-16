@@ -49,7 +49,7 @@ actor AppleScriptChannel: Channel {
 
     func healthCheck() async -> ChannelHealth {
         guard ProcessUtils.isLogicProRunning else {
-            return .unavailable("Logic Pro is not running")
+            return .unavailable("\(ProcessUtils.activeAppName) is not running")
         }
         return .healthy(detail: "AppleScript ready")
     }
@@ -76,14 +76,16 @@ actor AppleScriptChannel: Channel {
 
     // MARK: - Script templates
 
+    private var appName: String { ProcessUtils.activeAppName }
+
     private func newProjectScript() -> String {
         """
-        tell application "Logic Pro"
+        tell application "\(appName)"
             activate
             delay 0.5
         end tell
         tell application "System Events"
-            tell process "Logic Pro"
+            tell process "\(appName)"
                 click menu item "New..." of menu "File" of menu bar 1
             end tell
         end tell
@@ -93,7 +95,7 @@ actor AppleScriptChannel: Channel {
     private func openProjectScript(path: String) -> String {
         let escaped = path.replacingOccurrences(of: "\"", with: "\\\"")
         return """
-        tell application "Logic Pro"
+        tell application "\(appName)"
             activate
             open POSIX file "\(escaped)"
         end tell
@@ -111,7 +113,7 @@ actor AppleScriptChannel: Channel {
             saveClause = "saving yes"
         }
         return """
-        tell application "Logic Pro"
+        tell application "\(appName)"
             close front document \(saveClause)
         end tell
         """
@@ -119,7 +121,7 @@ actor AppleScriptChannel: Channel {
 
     private func saveProjectScript() -> String {
         """
-        tell application "Logic Pro"
+        tell application "\(appName)"
             save front document
         end tell
         """
@@ -127,7 +129,7 @@ actor AppleScriptChannel: Channel {
 
     private func transportScript(action: String) -> String {
         """
-        tell application "Logic Pro"
+        tell application "\(appName)"
             \(action)
         end tell
         """
