@@ -31,6 +31,14 @@ enum ProcessUtils {
         activeApp()?.variant.appName ?? AppVariant.defaultVariant.appName
     }
 
+    /// The name of the parent application that spawned this process (e.g. "Claude" or "Terminal").
+    /// Used in error messages to tell the user which app needs Accessibility permission.
+    static var parentAppName: String? {
+        let ppid = getppid()
+        guard let parent = NSRunningApplication(processIdentifier: ppid) else { return nil }
+        return parent.localizedName
+    }
+
     /// Bring Logic Pro to front (used sparingly — most operations don't need focus).
     static func activateLogicPro() -> Bool {
         guard let (_, pid) = activeApp() else { return false }

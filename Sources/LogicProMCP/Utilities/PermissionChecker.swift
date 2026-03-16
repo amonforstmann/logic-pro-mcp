@@ -16,7 +16,8 @@ enum PermissionChecker {
             lines.append("Accessibility: \(accessibility ? "granted" : "NOT GRANTED")")
             lines.append("Automation (\(name)): \(automationLogicPro ? "granted" : "NOT GRANTED")")
             if !accessibility {
-                lines.append("  → System Settings > Privacy & Security > Accessibility → add your terminal app")
+                let parentName = ProcessUtils.parentAppName ?? "your host application"
+                lines.append("  → System Settings > Privacy & Security > Accessibility → add \(parentName)")
             }
             if !automationLogicPro {
                 lines.append("  → System Settings > Privacy & Security > Automation → allow control of \(name)")

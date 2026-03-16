@@ -8,11 +8,13 @@ actor AccessibilityChannel: Channel {
     let id: ChannelID = .accessibility
 
     func start() async throws {
-        // Verify AX trust. If not trusted, the process needs to be added to
-        // System Preferences > Privacy & Security > Accessibility.
-        let trusted = AXIsProcessTrusted()
-        guard trusted else {
-            throw AccessibilityError.notTrusted
+        if !AXIsProcessTrusted() {
+            let parentName = ProcessUtils.parentAppName ?? "your host application"
+            Log.warn(
+                "Accessibility not trusted — add \(parentName) in System Settings > Privacy & Security > Accessibility. "
+                + "AX channel will remain available and retry on each operation.",
+                subsystem: "ax"
+            )
         }
         guard ProcessUtils.isLogicProRunning else {
             Log.warn("No Logic Pro variant running at AX channel start", subsystem: "ax")
@@ -118,10 +120,11 @@ actor AccessibilityChannel: Channel {
 
     func healthCheck() async -> ChannelHealth {
         guard AXIsProcessTrusted() else {
-            return .unavailable("Accessibility not trusted — add this process in System Preferences")
+            let parentName = ProcessUtils.parentAppName ?? "the host application"
+            return .unavailable("Accessibility not trusted — add \(parentName) in System Settings > Privacy & Security > Accessibility")
         }
         guard ProcessUtils.isLogicProRunning else {
-            return .unavailable("Logic Pro is not running")
+            return .unavailable("\(ProcessUtils.activeAppName) is not running")
         }
         // Quick smoke test: can we reach the app root?
         guard AXLogicProElements.appRoot() != nil else {
@@ -349,19 +352,6 @@ actor AccessibilityChannel: Channel {
             return .success(json)
         } catch {
             return .error("JSON encoding failed: \(error.localizedDescription)")
-        }
-    }
-}
-
-// MARK: - Errors
-
-enum AccessibilityError: Error, CustomStringConvertible {
-    case notTrusted
-
-    var description: String {
-        switch self {
-        case .notTrusted:
-            return "Process is not trusted for Accessibility. Add it in System Preferences > Privacy & Security > Accessibility."
         }
     }
 }
