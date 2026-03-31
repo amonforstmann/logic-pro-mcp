@@ -77,34 +77,38 @@ struct ProjectDispatcher {
 
         case "launch":
             if ProcessUtils.isLogicProRunning {
-                return CallTool.Result(content: [.text("Logic Pro is already running")], isError: false)
+                let name = ProcessUtils.activeAppName
+                return CallTool.Result(content: [.text("\(name) is already running")], isError: false)
             }
-            let script = "tell application \"Logic Pro\" to activate"
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-            process.arguments = ["-e", script]
+            // Default to regular Logic Pro for launch when nothing is running
+            let launchName = AppVariant.defaultVariant.appName
+            let launchScript = "tell application \"\(launchName)\" to activate"
+            let launchProcess = Process()
+            launchProcess.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+            launchProcess.arguments = ["-e", launchScript]
             do {
-                try process.run()
-                process.waitUntilExit()
-                return CallTool.Result(content: [.text("Logic Pro launched")], isError: false)
+                try launchProcess.run()
+                launchProcess.waitUntilExit()
+                return CallTool.Result(content: [.text("\(launchName) launched")], isError: false)
             } catch {
-                return CallTool.Result(content: [.text("Failed to launch Logic Pro: \(error)")], isError: true)
+                return CallTool.Result(content: [.text("Failed to launch \(launchName): \(error)")], isError: true)
             }
 
         case "quit":
             if !ProcessUtils.isLogicProRunning {
-                return CallTool.Result(content: [.text("Logic Pro is not running")], isError: false)
+                return CallTool.Result(content: [.text("No Logic Pro variant is running")], isError: false)
             }
-            let script = "tell application \"Logic Pro\" to quit"
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-            process.arguments = ["-e", script]
+            let quitName = ProcessUtils.activeAppName
+            let quitScript = "tell application \"\(quitName)\" to quit"
+            let quitProcess = Process()
+            quitProcess.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+            quitProcess.arguments = ["-e", quitScript]
             do {
-                try process.run()
-                process.waitUntilExit()
-                return CallTool.Result(content: [.text("Logic Pro quit")], isError: false)
+                try quitProcess.run()
+                quitProcess.waitUntilExit()
+                return CallTool.Result(content: [.text("\(quitName) quit")], isError: false)
             } catch {
-                return CallTool.Result(content: [.text("Failed to quit Logic Pro: \(error)")], isError: true)
+                return CallTool.Result(content: [.text("Failed to quit \(quitName): \(error)")], isError: true)
             }
 
         default:

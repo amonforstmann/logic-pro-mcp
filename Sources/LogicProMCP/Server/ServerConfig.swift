@@ -1,5 +1,42 @@
 import Foundation
 
+/// Represents the two Logic Pro application variants.
+enum AppVariant: String, Sendable, Equatable, CaseIterable {
+    case logicPro
+    case creatorStudio
+
+    var bundleID: String {
+        switch self {
+        case .logicPro: return "com.apple.logic10"
+        case .creatorStudio: return "com.apple.mobilelogic"
+        }
+    }
+
+    var appName: String {
+        switch self {
+        case .logicPro: return "Logic Pro"
+        case .creatorStudio: return "Logic Pro Creator Studio"
+        }
+    }
+
+    /// All known bundle IDs for Logic Pro variants.
+    static var allBundleIDs: [String] {
+        allCases.map(\.bundleID)
+    }
+
+    /// The default variant when no app is detected.
+    static let defaultVariant: AppVariant = .logicPro
+
+    /// Create from a bundle identifier, or nil if unrecognized.
+    init?(bundleID: String) {
+        if let match = Self.allCases.first(where: { $0.bundleID == bundleID }) {
+            self = match
+        } else {
+            return nil
+        }
+    }
+}
+
 /// Central configuration for the Logic Pro MCP server.
 /// All tunables live here — ports, timeouts, poll intervals.
 struct ServerConfig: Sendable {
@@ -42,6 +79,5 @@ struct ServerConfig: Sendable {
     static let channelHealthCheckTimeout: TimeInterval = 3.0
 
     // MARK: - Logic Pro
-    static let logicProBundleID = "com.apple.logic10"
-    static let logicProProcessName = "Logic Pro"
+    // Bundle IDs and app names are defined in AppVariant enum above.
 }

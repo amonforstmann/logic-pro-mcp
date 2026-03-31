@@ -5,7 +5,7 @@
 [![MCP SDK 0.10](https://img.shields.io/badge/MCP_SDK-0.10-blue.svg)](https://github.com/modelcontextprotocol/swift-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Bidirectional, stateful control of Logic Pro from AI assistants. Combines **5 native macOS control channels** (CoreMIDI, Accessibility, CGEvent, AppleScript, OSC) into a single MCP server with smart routing, fallback chains, and sub-millisecond transport latency.
+Bidirectional, stateful control of **Logic Pro** and **Logic Pro Creator Studio** from AI assistants. Combines **5 native macOS control channels** (CoreMIDI, Accessibility, CGEvent, AppleScript, OSC) into a single MCP server with smart routing, fallback chains, and sub-millisecond transport latency. Auto-detects which app variant is running.
 
 **8 tools, 7 resources, ~3k context tokens.** Not 100+ individual tools.
 
@@ -107,14 +107,23 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 The server requires two macOS permissions:
 
-1. **Accessibility** — System Settings > Privacy & Security > Accessibility > add your terminal app
-2. **Automation** — System Settings > Privacy & Security > Automation > allow control of Logic Pro
+1. **Accessibility** — System Settings > Privacy & Security > Accessibility
+2. **Automation** — System Settings > Privacy & Security > Automation > allow control of Logic Pro (or Logic Pro Creator Studio)
+
+The process that needs Accessibility trust depends on how you run the server:
+
+| Host | What to add to Accessibility |
+|------|------------------------------|
+| **Terminal / Claude Code** | Your terminal app (Terminal, iTerm2, Ghostty, etc.) |
+| **Claude Desktop** | `/Applications/Claude.app/Contents/Helpers/disclaimer` — the helper binary that spawns MCP servers. Use Finder (Cmd+Shift+G) to navigate there, then drag it into the Accessibility list. |
 
 Check permission status:
 
 ```bash
 LogicProMCP --check-permissions
 ```
+
+> **Note:** `--check-permissions` reflects the trust status of the *current* process. Running it from your terminal may show "granted" while Claude Desktop still reports "not trusted" — they are different parent processes.
 
 ## Usage
 
@@ -159,7 +168,7 @@ Same 100+ operations. 90% less context.
 
 ## Limitations
 
-Logic Pro does not expose a programmatic API. This server works within macOS platform constraints:
+Logic Pro (and Logic Pro Creator Studio) do not expose a programmatic API. This server works within macOS platform constraints:
 
 - UI element paths may change between Logic Pro versions
 - Some deep state (automation curves, region MIDI data) is not exposed via Accessibility

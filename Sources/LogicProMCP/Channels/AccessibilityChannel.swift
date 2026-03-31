@@ -8,14 +8,16 @@ actor AccessibilityChannel: Channel {
     let id: ChannelID = .accessibility
 
     func start() async throws {
-        // Verify AX trust. If not trusted, the process needs to be added to
-        // System Preferences > Privacy & Security > Accessibility.
-        let trusted = AXIsProcessTrusted()
-        guard trusted else {
-            throw AccessibilityError.notTrusted
+        if !AXIsProcessTrusted() {
+            let parentName = ProcessUtils.parentAppName ?? "your host application"
+            Log.warn(
+                "Accessibility not trusted — add \(parentName) in System Settings > Privacy & Security > Accessibility. "
+                + "AX channel will remain available and retry on each operation.",
+                subsystem: "ax"
+            )
         }
         guard ProcessUtils.isLogicProRunning else {
-            Log.warn("Logic Pro not running at AX channel start", subsystem: "ax")
+            Log.warn("No Logic Pro variant running at AX channel start", subsystem: "ax")
             return
         }
         Log.info("Accessibility channel started", subsystem: "ax")
@@ -27,7 +29,7 @@ actor AccessibilityChannel: Channel {
 
     func execute(operation: String, params: [String: String]) async -> ChannelResult {
         guard ProcessUtils.isLogicProRunning else {
-            return .error("Logic Pro is not running")
+            return .error("\(ProcessUtils.activeAppName) is not running")
         }
 
         switch operation {
@@ -118,16 +120,17 @@ actor AccessibilityChannel: Channel {
 
     func healthCheck() async -> ChannelHealth {
         guard AXIsProcessTrusted() else {
-            return .unavailable("Accessibility not trusted — add this process in System Preferences")
+            let parentName = ProcessUtils.parentAppName ?? "the host application"
+            return .unavailable("Accessibility not trusted — add \(parentName) in System Settings > Privacy & Security > Accessibility")
         }
         guard ProcessUtils.isLogicProRunning else {
-            return .unavailable("Logic Pro is not running")
+            return .unavailable("\(ProcessUtils.activeAppName) is not running")
         }
         // Quick smoke test: can we reach the app root?
         guard AXLogicProElements.appRoot() != nil else {
-            return .unavailable("Cannot access Logic Pro AX element")
+            return .unavailable("Cannot access \(ProcessUtils.activeAppName) AX element")
         }
-        return .healthy(detail: "AX connected to Logic Pro")
+        return .healthy(detail: "AX connected to \(ProcessUtils.activeAppName)")
     }
 
     // MARK: - Transport
@@ -327,7 +330,7 @@ actor AccessibilityChannel: Channel {
 
     private func getProjectInfo() -> ChannelResult {
         guard let window = AXLogicProElements.mainWindow() else {
-            return .error("Cannot locate Logic Pro main window")
+            return .error("Cannot locate \(ProcessUtils.activeAppName) main window")
         }
         let title = AXHelpers.getTitle(window) ?? "Unknown"
         var info = ProjectInfo()
@@ -349,19 +352,6 @@ actor AccessibilityChannel: Channel {
             return .success(json)
         } catch {
             return .error("JSON encoding failed: \(error.localizedDescription)")
-        }
-    }
-}
-
-// MARK: - Errors
-
-enum AccessibilityError: Error, CustomStringConvertible {
-    case notTrusted
-
-    var description: String {
-        switch self {
-        case .notTrusted:
-            return "Process is not trusted for Accessibility. Add it in System Preferences > Privacy & Security > Accessibility."
         }
     }
 }
